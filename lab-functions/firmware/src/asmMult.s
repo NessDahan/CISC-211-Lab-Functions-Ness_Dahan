@@ -14,7 +14,7 @@
 .type nameStr,%gnu_unique_object
     
 /*** STUDENTS: Change the next line to your name!  **/
-nameStr: .asciz "Inigo Montoya"  
+nameStr: .asciz "Ness Dahan"  
 
 .align   /* realign so that next mem allocations are on word boundaries */
  
@@ -81,7 +81,16 @@ asmUnpack:
     /*** REMEMBER: You MUST use the ARM calling convention as described in the lectures! ***/
 
     /*** STUDENTS: Place your asmUnpack code BELOW this line!!! **************/
-    
+
+    push {r4-r11,LR}
+    ASR r4, r0, 16
+    LSL r5, r0, 16
+    ASR r5, r5, 16
+    STR r4, [r1]
+    STR r5, [r2]
+    pop {r4-r11,LR}
+    mov pc, lr
+
     /*** STUDENTS: Place your asmUnpack code ABOVE this line!!! **************/
 
 
@@ -101,7 +110,19 @@ asmAbs:
     /*** REMEMBER: You MUST use the ARM calling convention as described in the lectures! ***/
 
     /*** STUDENTS: Place your asmAbs code BELOW this line!!! **************/
-    
+
+    push {r4-r11,LR}
+    LSR r4, r0, 31
+    MOV r5, r0
+    CMP r0, 0
+    BGE abs_store
+    RSB r5, r0, 0
+abs_store:
+    STR r5, [r1]
+    STR r4, [r2]
+    MOV r0, r5
+    pop {r4-r11,LR}
+    mov pc, lr
 
     /*** STUDENTS: Place your asmAbs code ABOVE this line!!! **************/
 
@@ -120,6 +141,19 @@ asmMult:
 
     /*** STUDENTS: Place your asmMult code BELOW this line!!! **************/
 
+    push {r4-r11,LR}
+    MOV r4, 0
+mult_loop:
+    LSRS r1, r1, 1
+    BCC mult_no_add
+    ADD r4, r4, r0
+mult_no_add:
+    LSL r0, r0, 1
+    CMP r1, 0
+    BNE mult_loop
+    MOV r0, r4
+    pop {r4-r11,LR}
+    mov pc, lr
 
     /*** STUDENTS: Place your asmMult code ABOVE this line!!! **************/
 
@@ -144,7 +178,15 @@ asmFixSign:
 
     /*** STUDENTS: Place your asmFixSign code BELOW this line!!! **************/
 
-    
+    push {r4-r11,LR}
+    EOR r4, r1, r2
+    CMP r4, 0
+    BEQ fix_done
+    RSB r0, r0, 0
+fix_done:
+    pop {r4-r11,LR}
+    mov pc, lr
+
     /*** STUDENTS: Place your asmFixSign code ABOVE this line!!! **************/
 
 
@@ -171,25 +213,35 @@ asmMain:
 
     /*** STUDENTS: Place your asmMain code BELOW this line!!! **************/
     
+    push {r4-r11,LR}
+
     /* Step 1:
      * call asmUnpack. Have it store the output values in a_Multiplicand
      * and b_Multiplier.
      */
-
+    LDR r1, =a_Multiplicand
+    LDR r2, =b_Multiplier
+    BL asmUnpack
 
      /* Step 2a:
       * call asmAbs for the multiplicand (a). Have it store the absolute value
       * in a_Abs, and the sign in a_Sign.
       */
-
-
+    LDR r0, =a_Multiplicand
+    LDR r0, [r0]
+    LDR r1, =a_Abs
+    LDR r2, =a_Sign
+    BL asmAbs
 
      /* Step 2b:
       * call asmAbs for the multiplier (b). Have it store the absolute value
       * in b_Abs, and the sign in b_Sign.
       */
-
-
+    LDR r0, =b_Multiplier
+    LDR r0, [r0]
+    LDR r1, =b_Abs
+    LDR r2, =b_Sign
+    BL asmAbs
 
     /* Step 3:
      * call asmMult. Pass a_Abs as the multiplicand, 
@@ -198,7 +250,13 @@ asmMain:
      * In this function (asmMain), store the output value  
      * returned asmMult in r0 to mem location init_Product.
      */
-
+    LDR r0, =a_Abs
+    LDR r0, [r0]
+    LDR r1, =b_Abs
+    LDR r1, [r1]
+    BL asmMult
+    LDR r1, =init_Product
+    STR r0, [r1]
 
     /* Step 4:
      * call asmFixSign. Pass in the initial product, and the
@@ -207,7 +265,13 @@ asmMain:
      * sign. Store the value returned in r0 to mem location 
      * final_Product.
      */
-
+    LDR r1, =a_Sign
+    LDR r1, [r1]
+    LDR r2, =b_Sign
+    LDR r2, [r2]
+    BL asmFixSign
+    LDR r1, =final_Product
+    STR r0, [r1]
 
      /* Step 5:
       * END! Return to caller. Make sure of the following:
@@ -215,7 +279,8 @@ asmMain:
       * 2) the final answer is stored in r0, so that the C call 
       *    can access it.
       */
-
+    pop {r4-r11,LR}
+    mov pc, lr
 
     
     /*** STUDENTS: Place your asmMain code ABOVE this line!!! **************/
