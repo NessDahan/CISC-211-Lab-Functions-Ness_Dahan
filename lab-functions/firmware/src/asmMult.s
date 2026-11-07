@@ -14,7 +14,7 @@
 .type nameStr,%gnu_unique_object
     
 /*** STUDENTS: Change the next line to your name!  **/
-nameStr: .asciz "Ness Dahan" /* my name, the C code prints this */
+nameStr: .asciz "Ness Dahan"
 
 .align   /* realign so that next mem allocations are on word boundaries */
  
